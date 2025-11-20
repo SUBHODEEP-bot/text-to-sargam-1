@@ -128,7 +128,7 @@ const Index = () => {
               Sargam Sound Wave
             </h1>
             <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Transform text into musical notes through ASCII magic 
+              Transform text into musical notes through ASCII magic ✨
             </p>
           </div>
 
@@ -225,17 +225,9 @@ const Index = () => {
                   </div>)}
               </div>
               
-              <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg border border-primary/20 bg-gray-50">
-                <p className="text-xs md:text-sm text-muted-foreground text-center">Sargam Notes: Sa=261Hz, Re=293Hz, Ga=329Hz, Ma=349Hz, Pa=392Hz, Dha=440Hz, Ni=493Hz
-
-
-created by SUBHODEEP PAL   
-
-
-
-
-
-                <strong className="text-primary">Sargam Notes:</strong> Sa=261Hz, Re=293Hz, Ga=329Hz, Ma=349Hz, Pa=392Hz, Dha=440Hz, Ni=493Hz
+              <div className="mt-4 md:mt-6 p-3 md:p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <p className="text-xs md:text-sm text-muted-foreground text-center">
+                  <strong className="text-primary">Sargam Notes:</strong> Sa=261Hz, Re=293Hz, Ga=329Hz, Ma=349Hz, Pa=392Hz, Dha=440Hz, Ni=493Hz
                 </p>
               </div>
             </Card>
