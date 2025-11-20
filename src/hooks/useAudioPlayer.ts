@@ -8,6 +8,7 @@ export function useAudioPlayer() {
   const stopFlagRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recordingDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -31,6 +32,11 @@ export function useAudioPlayer() {
 
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
+        
+        // Also connect to recording destination if recording
+        if (recordingDestinationRef.current) {
+          gainNode.connect(recordingDestinationRef.current);
+        }
 
         oscillator.type = "sine";
         oscillator.frequency.value = frequency;
@@ -60,6 +66,7 @@ export function useAudioPlayer() {
       if (recordAudio) {
         const audioContext = initAudioContext();
         const dest = audioContext.createMediaStreamDestination();
+        recordingDestinationRef.current = dest;
         const mediaRecorder = new MediaRecorder(dest.stream);
         mediaRecorderRef.current = mediaRecorder;
         audioChunksRef.current = [];
@@ -83,6 +90,7 @@ export function useAudioPlayer() {
       // Stop recording if it was started
       if (recordAudio && mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
+        recordingDestinationRef.current = null;
       }
 
       setIsPlaying(false);
