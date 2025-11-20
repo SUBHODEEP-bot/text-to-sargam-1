@@ -160,10 +160,7 @@ const Index = () => {
                       Stop
                     </Button>}
                   
-                  <Button onClick={handleDownload} size="lg" variant="outline" disabled={!downloadAudioRef.current || isDownloading} className="h-12 md:h-14 text-base md:text-lg font-semibold border-2 hover:scale-105 transition-all">
-                    <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    Download
-                  </Button>
+                  
                 </div>
 
                 <Button onMouseDown={handleMicPress} onMouseUp={handleMicPress} onTouchStart={handleMicPress} onTouchEnd={handleMicPress} size="lg" variant="secondary" disabled={isPlaying} className={`h-12 md:h-14 text-base md:text-lg font-semibold transition-all duration-300 ${isListening ? "bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse scale-105" : "hover:scale-105"}`}>
