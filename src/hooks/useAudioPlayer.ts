@@ -6,6 +6,8 @@ export function useAudioPlayer() {
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const audioContextRef = useRef<AudioContext | null>(null);
   const stopFlagRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -50,9 +52,26 @@ export function useAudioPlayer() {
   );
 
   const playSequence = useCallback(
-    async (sequence: SargamNote[], noteDuration: number = 300) => {
+    async (sequence: SargamNote[], noteDuration: number = 300, recordAudio: boolean = false) => {
       setIsPlaying(true);
       stopFlagRef.current = false;
+
+      // Start recording if requested
+      if (recordAudio) {
+        const audioContext = initAudioContext();
+        const dest = audioContext.createMediaStreamDestination();
+        const mediaRecorder = new MediaRecorder(dest.stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.start();
+      }
 
       for (let i = 0; i < sequence.length; i++) {
         if (stopFlagRef.current) break;
@@ -61,16 +80,31 @@ export function useAudioPlayer() {
         await playNote(sequence[i].frequency, noteDuration);
       }
 
+      // Stop recording if it was started
+      if (recordAudio && mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+      }
+
       setIsPlaying(false);
       setCurrentIndex(-1);
     },
-    [playNote]
+    [playNote, initAudioContext]
   );
 
   const stop = useCallback(() => {
     stopFlagRef.current = true;
     setIsPlaying(false);
     setCurrentIndex(-1);
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
+
+  const getRecordedAudio = useCallback((): Blob | null => {
+    if (audioChunksRef.current.length > 0) {
+      return new Blob(audioChunksRef.current, { type: "audio/webm" });
+    }
+    return null;
   }, []);
 
   return {
@@ -78,5 +112,6 @@ export function useAudioPlayer() {
     currentIndex,
     playSequence,
     stop,
+    getRecordedAudio,
   };
 }

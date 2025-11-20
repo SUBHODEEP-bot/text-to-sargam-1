@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -7,18 +7,30 @@ import { EnhancedWaveVisualizer } from "@/components/EnhancedWaveVisualizer";
 import { FloatingNotes } from "@/components/FloatingNotes";
 import { textToSargam, stepsToAudioSequence, ConversionStep } from "@/lib/audioConverter";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
-import { Music, Play, Square, Waves, Sparkles, Info } from "lucide-react";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { Music, Play, Square, Waves, Sparkles, Info, Download, Mic } from "lucide-react";
 import { toast } from "sonner";
 const Index = () => {
   const [inputText, setInputText] = useState("");
   const [conversionSteps, setConversionSteps] = useState<ConversionStep[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const downloadAudioRef = useRef<Blob | null>(null);
+  
   const {
     isPlaying,
     currentIndex,
     playSequence,
-    stop
+    stop,
+    getRecordedAudio
   } = useAudioPlayer();
-  const handlePlay = () => {
+
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening
+  } = useSpeechRecognition();
+  const handlePlay = async () => {
     if (!inputText.trim()) {
       toast.error("Please enter some text first!");
       return;
@@ -26,7 +38,14 @@ const Index = () => {
     const steps = textToSargam(inputText);
     setConversionSteps(steps);
     const sequence = stepsToAudioSequence(steps);
-    playSequence(sequence, 300);
+    await playSequence(sequence, 300, true);
+    
+    // Get recorded audio for download
+    const audioBlob = getRecordedAudio();
+    if (audioBlob) {
+      downloadAudioRef.current = audioBlob;
+    }
+    
     toast.success(`Playing ${sequence.length} notes!`, {
       icon: "🎵"
     });
@@ -35,6 +54,54 @@ const Index = () => {
     stop();
     toast.info("Playback stopped");
   };
+
+  const handleDownload = () => {
+    if (!downloadAudioRef.current) {
+      toast.error("No audio to download. Play the wave first!");
+      return;
+    }
+
+    setIsDownloading(true);
+    const url = URL.createObjectURL(downloadAudioRef.current);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sargam-${inputText.slice(0, 20)}-${Date.now()}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setIsDownloading(false);
+    
+    toast.success("Audio downloaded!", {
+      icon: "📥"
+    });
+  };
+
+  const handleMicPress = () => {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    try {
+      startListening();
+      toast.info("Listening... Speak now!", {
+        icon: "🎤"
+      });
+    } catch (error) {
+      toast.error("Microphone access denied or not supported");
+    }
+  };
+
+  // When transcript changes, update input
+  if (transcript && !isListening) {
+    if (transcript !== inputText) {
+      setInputText(transcript);
+      toast.success(`Captured: "${transcript}"`, {
+        icon: "✨"
+      });
+    }
+  }
   const quickFills = [{
     label: "Try: MUSIC",
     value: "MUSIC"
@@ -65,7 +132,7 @@ const Index = () => {
               <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-accent-cyan" />
               <Waves className="w-10 h-10 md:w-12 md:h-12 text-accent" />
             </div>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent gradient-animate px-4">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent gradient-animate px-4 break-words w-full">
               Sargam Sound Wave
             </h1>
             <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
@@ -85,18 +152,71 @@ const Index = () => {
                 
                 {/* Quick fill buttons */}
                 <div className="flex flex-wrap gap-2">
-                  {quickFills.map(quick => {})}
+                  {quickFills.map(quick => (
+                    <Button
+                      key={quick.value}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInputText(quick.value)}
+                      disabled={isPlaying}
+                      className="text-xs"
+                    >
+                      {quick.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
-                {!isPlaying ? <Button onClick={handlePlay} size="lg" className="flex-1 h-12 md:h-14 text-base md:text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:shadow-glow transition-all duration-300 hover:scale-105">
-                    <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    Play Wave
-                  </Button> : <Button onClick={handleStop} size="lg" variant="destructive" className="flex-1 h-12 md:h-14 text-base md:text-lg font-semibold hover:scale-105 transition-all">
-                    <Square className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                    Stop
-                  </Button>}
+              <div className="flex flex-col gap-2 md:gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                  {!isPlaying ? (
+                    <Button 
+                      onClick={handlePlay} 
+                      size="lg" 
+                      className="flex-1 h-12 md:h-14 text-base md:text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:shadow-glow transition-all duration-300 hover:scale-105"
+                    >
+                      <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                      Play Wave
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={handleStop} 
+                      size="lg" 
+                      variant="destructive" 
+                      className="flex-1 h-12 md:h-14 text-base md:text-lg font-semibold hover:scale-105 transition-all"
+                    >
+                      <Square className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                      Stop
+                    </Button>
+                  )}
+                  
+                  <Button
+                    onClick={handleDownload}
+                    size="lg"
+                    variant="outline"
+                    disabled={!downloadAudioRef.current || isDownloading}
+                    className="h-12 md:h-14 text-base md:text-lg font-semibold border-2 hover:scale-105 transition-all"
+                  >
+                    <Download className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                    Download
+                  </Button>
+                </div>
+
+                <Button
+                  onMouseDown={handleMicPress}
+                  onMouseUp={handleMicPress}
+                  onTouchStart={handleMicPress}
+                  onTouchEnd={handleMicPress}
+                  size="lg"
+                  variant="secondary"
+                  disabled={isPlaying}
+                  className={`h-12 md:h-14 text-base md:text-lg font-semibold transition-all duration-300 ${
+                    isListening ? "bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse scale-105" : "hover:scale-105"
+                  }`}
+                >
+                  <Mic className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                  {isListening ? "Listening..." : "Hold to Record Voice"}
+                </Button>
               </div>
 
               {/* Enhanced Wave Visualizer */}
