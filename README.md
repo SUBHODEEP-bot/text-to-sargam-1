@@ -1,37 +1,44 @@
+# Text-to-Sargam Converter 🎵
 
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+A modern web application that converts text into musical sargam notation in real-time. Built with the latest web technologies, this project aims to provide an intuitive and responsive interface for musicians, music students, and enthusiasts to visualize text as musical sequences.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+[Live Demo](https://text-to-sound-wave.netlify.app/)
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Features
+
+- Convert any text into sargam (musical notes) instantly.
+- User-friendly and responsive interface.
+- Modern UI components using **shadcn-ui**.
+- Fully interactive experience powered by **React** and **Tailwind CSS**.
+- Fast development workflow with **Vite** and **TypeScript**.
+
+---
+
+## Tech Stack
+
+- **Frontend:** React, TypeScript, Tailwind CSS  
+- **UI Library:** shadcn-ui  
+- **Build Tool:** Vite  
+- **Deployment:** Netlify  
+
+---
+
+## Folder Structure
+
+
+├───public
+└───src
+    ├───components
+    │   └───ui
+    ├───hooks
+    ├───lib
+    └───pages
+
+
+
+## Install dependencies
+npm install
 npm run dev
-```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
